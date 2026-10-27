@@ -1,0 +1,10 @@
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    age INT NOT NULL,
+    address TEXT NOT NULL,
+    joining_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_registered BOOLEAN NOT NULL DEFAULT FALSE
+);

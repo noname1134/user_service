@@ -36,6 +36,8 @@ class UserRepository:
             try:
                 cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
                 result = cursor.fetchone()
+                if result is not None:
+                    result["joining_date"] = result["joining_date"].replace(tzinfo=timezone.utc)
                 return result
             finally:
                 cursor.close()

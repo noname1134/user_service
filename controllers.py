@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from schemas import UserCreate, UserUpdate
+from schemas import UserCreate, UserUpdate, UserResponse
 from services import UserService
 
 
@@ -8,7 +8,7 @@ router = APIRouter(prefix="/users")
 user_service = UserService()
 
 
-@router.get("/{user_id}")
+@router.get("/{user_id}", response_model=UserResponse)
 def get_user(user_id: int):
     res = user_service.get_user(user_id)
     if res is None:
@@ -16,12 +16,12 @@ def get_user(user_id: int):
     return res
 
 
-@router.post("")
+@router.post("", response_model=UserResponse)
 def create_user(user: UserCreate):
     return user_service.create_user(user)
 
 
-@router.patch("/{user_id}")
+@router.patch("/{user_id}", response_model=UserResponse)
 def update_user(user_id: int, user: UserUpdate):
     try:
         res = user_service.update_user(user_id, user)
@@ -40,7 +40,7 @@ def delete_user(user_id: int):
     return {"message": "User deleted"}
 
 
-@router.post("/{user_id}/register")
+@router.post("/{user_id}/register", response_model=UserResponse)
 def register_user(user_id: int):
     res = user_service.register_user(user_id)
     if res is None:

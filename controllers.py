@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from schemas import UserCreate, UserUpdate, UserResponse
 from services import UserService
+from exceptions import PollServiceUnavailableError
 
 
 router = APIRouter(prefix="/users")
@@ -35,9 +36,12 @@ def update_user(user_id: int, user: UserUpdate):
 
 @router.delete("/{user_id}")
 def delete_user(user_id: int):
-    if user_service.delete_user(user_id) is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return {"message": "User deleted"}
+    try:
+        if user_service.delete_user(user_id) is None:
+            raise HTTPException(status_code=404, detail="User not found")
+        return {"message": "User deleted"}
+    except PollServiceUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
 
 
 @router.post("/{user_id}/register", response_model=UserResponse)

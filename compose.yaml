@@ -21,6 +21,7 @@ services:
   api:
     build: .
     environment:
+      POLL_SERVICE_URL: http://poll-api:8000
       MYSQL_HOST: db
       MYSQL_PORT: "3306"
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -31,6 +32,17 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      default: {}
+      service_network:
+        aliases:
+          - user-api
 
+networks:
+  default: {}
+  service_network:
+    external: true
+    name: poll-system
+              
 volumes:
   users_mysql_data:

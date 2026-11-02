@@ -1,9 +1,8 @@
 from fastapi import APIRouter, HTTPException
 
-from schemas import UserCreate, UserUpdate, UserResponse
-from services import UserService
 from exceptions import PollServiceUnavailableError
-
+from schemas import UserCreate, UserResponse, UserUpdate
+from services import UserService
 
 router = APIRouter(prefix="/users")
 user_service = UserService()

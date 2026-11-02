@@ -1,6 +1,6 @@
-from schemas import UserCreate, UserUpdate
-from repositories import UserRepository
 from clients import PollClient
+from repositories import UserRepository
+from schemas import UserCreate, UserUpdate
 
 
 class UserService:
@@ -27,7 +27,6 @@ class UserService:
 
         self.poll_client.delete_user_answers(user_id)
         return self.repository.delete_user(user_id)
-
 
     def register_user(self, user_id: int):
         return self.repository.update_user(user_id, {"is_registered": True})

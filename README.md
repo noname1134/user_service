@@ -1,5 +1,7 @@
 # User Service
 
+[![Python CI](https://github.com/noname1134/user_service/actions/workflows/ci.yml/badge.svg)](https://github.com/noname1134/user_service/actions/workflows/ci.yml)
+
 A REST API for managing customer profiles and registration in a two-service polling system.
 
 Built with **Python, FastAPI, and MySQL**, with **Docker Compose** for local deployment. The service integrates with [Poll Service](https://github.com/noname1134/poll_service) to remove a user's answers before deleting their profile.
@@ -13,6 +15,7 @@ Built with **Python, FastAPI, and MySQL**, with **Docker Compose** for local dep
 - Coordinate answer cleanup with the Poll Service during user deletion.
 - Use parameterized SQL queries and an allowlist of update fields.
 - Explore endpoints through interactive Swagger documentation.
+- Verify API behavior and MySQL persistence with automated tests and GitHub Actions.
 
 ## Technology Stack
 
@@ -252,10 +255,85 @@ These operations are sequential HTTP and database operations, not a distributed 
 | `422 Unprocessable Entity` | Invalid age, invalid name length, missing timezone, or explicit null in a profile update |
 | `503 Service Unavailable` | Poll Service cannot be reached or returns an unsuccessful HTTP status during deletion |
 
+## Testing and Code Quality
+
+Run the following commands from the repository root using Python 3.10 or newer.
+
+### Install development dependencies
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements-dev.txt
+```
+
+### API tests
+
+```bash
+python -m pytest tests/test_users.py -v
+```
+
+The 12 API test cases exercise real FastAPI routes, request validation, and service logic while mocking database access and Poll Service calls. No running database or Poll Service is required.
+
+Coverage includes user creation responses, invalid input, missing users, registration, deletion order, explicit null updates, and returning `503` without deleting the user when Poll Service cleanup fails.
+
+### MySQL integration tests
+
+Start the disposable MySQL 8.4 database, then enable the integration tests:
+
+```bash
+docker compose -p user-integration -f compose.test.yaml up -d --wait --wait-timeout 180
+RUN_MYSQL_TESTS=1 python -m pytest tests/integration/ -v
+```
+
+The four integration tests execute real repository queries and verify:
+
+- User fields are persisted with registration disabled by default.
+- Timezone-aware joining dates are stored in UTC and returned with UTC timezone information.
+- Registration updates persist across database connections.
+- Deleting a user removes that record while preserving another user's record.
+
+The test database uses port `3310`, dedicated test credentials, and temporary storage. It initializes from the existing `sql/` scripts. Each test cleans up its own records; stopping the container discards the temporary database.
+
+Stop the test database when finished:
+
+```bash
+docker compose -p user-integration -f compose.test.yaml down
+```
+
+On Linux, prefix the Docker commands with `sudo` if your user lacks Docker socket access. Run Python commands from your activated virtual environment without `sudo`.
+
+To run all 16 test cases with the test database running:
+
+```bash
+RUN_MYSQL_TESTS=1 python -m pytest tests/ -v
+```
+
+Without `RUN_MYSQL_TESTS=1`, the four database tests are skipped.
+
+### Lint and formatting
+
+```bash
+ruff check .
+ruff format --check .
+```
+
+Apply formatting locally with `ruff format .`.
+
+### Continuous integration
+
+[Python CI](https://github.com/noname1134/user_service/actions/workflows/ci.yml) runs automatically on pushes and pull requests:
+
+| Job | Checks |
+| :--- | :--- |
+| `checks` | Ruff lint, formatting, and the API test suite; database tests are skipped |
+| `mysql-integration` | Starts the temporary MySQL database and runs all four database integration tests |
+
+The workflow uses Python 3.10 and stops the test database after the integration job, including when tests fail.
+
 ## Current Limitations
 
 - Authentication and authorization are not implemented.
 - Email addresses are stored as strings without email-format validation or a uniqueness constraint.
 - Cross-service deletion is not atomic.
 - SQL scripts initialize a new database; schema migrations are not implemented.
-- Automated tests and CI are not yet included.
